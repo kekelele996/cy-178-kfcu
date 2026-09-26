@@ -26,6 +26,8 @@ db.exec(`
     parent_id INTEGER,
     content TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
+    is_farewell INTEGER NOT NULL DEFAULT 0,
+    sealed_at INTEGER,
     created_at INTEGER NOT NULL,
     FOREIGN KEY (sender_id) REFERENCES users(id),
     FOREIGN KEY (receiver_id) REFERENCES users(id),
@@ -46,5 +48,14 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_letters_receiver ON letters(receiver_id);
   CREATE INDEX IF NOT EXISTS idx_letters_parent ON letters(parent_id);
 `);
+
+// Lightweight migrations for databases created before sealed threads existed
+const letterColumns = db.prepare('PRAGMA table_info(letters)').all();
+if (!letterColumns.some((c) => c.name === 'is_farewell')) {
+  db.exec("ALTER TABLE letters ADD COLUMN is_farewell INTEGER NOT NULL DEFAULT 0");
+}
+if (!letterColumns.some((c) => c.name === 'sealed_at')) {
+  db.exec('ALTER TABLE letters ADD COLUMN sealed_at INTEGER');
+}
 
 module.exports = db;

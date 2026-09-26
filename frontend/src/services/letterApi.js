@@ -14,6 +14,12 @@ export const LetterApi = {
       body: JSON.stringify({ content })
     });
   },
+  farewell({ id, content }) {
+    return api.request(ENDPOINTS.FAREWELL_LETTER(id), {
+      method: 'POST',
+      body: JSON.stringify({ content })
+    });
+  },
   skip(id) {
     return api.request(ENDPOINTS.SKIP_LETTER(id), { method: 'POST' });
   },

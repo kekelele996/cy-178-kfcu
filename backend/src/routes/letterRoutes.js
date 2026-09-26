@@ -37,7 +37,38 @@ router.post('/:id/reply', (req, res) => {
     res.json({ message: MESSAGES.REPLIED, id: reply.id });
   } catch (err) {
     const status =
-      err.code === 'NOT_FOUND' ? 404 : err.code === 'FORBIDDEN' ? 403 : 500;
+      err.code === 'NOT_FOUND'
+        ? 404
+        : err.code === 'FORBIDDEN'
+          ? 403
+          : err.code === 'CONFLICT'
+            ? 409
+            : 500;
+    res.status(status).json({ error: err.message });
+  }
+});
+
+router.post('/:id/farewell', (req, res) => {
+  try {
+    const { content } = req.body || {};
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: '告别内容不能为空' });
+    }
+    const farewell = LetterService.sendFarewell({
+      userId: req.user.id,
+      rootId: Number(req.params.id),
+      content: content.trim()
+    });
+    res.status(201).json({ message: MESSAGES.FAREWELL_SENT, id: farewell.id });
+  } catch (err) {
+    const status =
+      err.code === 'NOT_FOUND'
+        ? 404
+        : err.code === 'FORBIDDEN'
+          ? 403
+          : err.code === 'CONFLICT'
+            ? 409
+            : 500;
     res.status(status).json({ error: err.message });
   }
 });

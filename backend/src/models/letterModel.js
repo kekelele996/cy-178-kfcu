@@ -1,17 +1,33 @@
 const db = require('../data/database');
 
 const LetterModel = {
-  create({ senderId, receiverId, parentId, content, status, createdAt }) {
+  inTransaction(fn) {
+    return db.transaction(fn)();
+  },
+
+  create({ senderId, receiverId, parentId, content, status, isFarewell, createdAt }) {
     const stmt = db.prepare(
-      `INSERT INTO letters (sender_id, receiver_id, parent_id, content, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO letters (sender_id, receiver_id, parent_id, content, status, is_farewell, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     );
-    const info = stmt.run(senderId, receiverId, parentId || null, content, status, createdAt);
+    const info = stmt.run(
+      senderId,
+      receiverId,
+      parentId || null,
+      content,
+      status,
+      isFarewell ? 1 : 0,
+      createdAt
+    );
     return info.lastInsertRowid;
   },
 
   findById(id) {
     return db.prepare('SELECT * FROM letters WHERE id = ?').get(id);
+  },
+
+  findRootById(id) {
+    return db.prepare('SELECT * FROM letters WHERE id = ? AND parent_id IS NULL').get(id);
   },
 
   findRootByChild(id) {
@@ -31,6 +47,10 @@ const LetterModel = {
 
   updateStatus(id, status) {
     return db.prepare('UPDATE letters SET status = ? WHERE id = ?').run(status, id);
+  },
+
+  sealRoot(id, sealedAt) {
+    return db.prepare('UPDATE letters SET sealed_at = ? WHERE id = ?').run(sealedAt, id);
   },
 
   listSentByUser(userId) {

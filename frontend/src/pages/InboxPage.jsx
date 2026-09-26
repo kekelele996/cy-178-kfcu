@@ -16,9 +16,13 @@ function formatTime(ts) {
 }
 
 function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
-  const statusClass = item.status === 'skipped' ? 'badge skipped' : 'badge';
+  const statusClass = item.status === 'skipped'
+    ? 'badge skipped'
+    : item.sealed
+      ? 'badge sealed'
+      : 'badge';
   return (
-    <div className="letter-card" onClick={() => onOpen(item.id)}>
+    <div className={`letter-card ${item.sealed ? 'is-sealed' : ''}`} onClick={() => onOpen(item.id)}>
       <div className="letter-meta">
         <span>
           {item.role === 'sent' ? LABELS.SENT_FROM_ME : LABELS.SENT_FROM_STRANGER}
@@ -26,12 +30,17 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
         </span>
         <span>
           {formatTime(item.createdAt)}
-          {item.status && item.status !== 'delivered' && item.status !== 'pending' && (
+          {item.sealed ? (
+            <>
+              {' '}
+              <span className={statusClass}>{STATUS_TEXT.sealed}</span>
+            </>
+          ) : item.status && item.status !== 'delivered' && item.status !== 'pending' ? (
             <>
               {' '}
               <span className={statusClass}>{STATUS_TEXT[item.status]}</span>
             </>
-          )}
+          ) : null}
         </span>
       </div>
       <div className="letter-preview">{item.preview}{item.preview.length >= 80 ? '…' : ''}</div>

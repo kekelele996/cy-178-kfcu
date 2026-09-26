@@ -494,6 +494,63 @@ input, textarea {
   border-color: var(--line);
 }
 
+.badge.sealed {
+  background: #eef0ea;
+  color: #5d6b54;
+  border-color: #c3cbb8;
+}
+
+.thread-head h2 .badge {
+  margin-left: 10px;
+  vertical-align: middle;
+  font-weight: 400;
+}
+
+.thread-wrap.sealed {
+  border-style: dashed;
+}
+
+.msg-bubble.farewell {
+  border: 1px solid var(--accent-soft);
+  box-shadow: 0 0 0 3px rgba(216, 154, 136, 0.25);
+}
+
+.msg-tag {
+  font-size: 12px;
+  letter-spacing: 2px;
+  margin-bottom: 6px;
+  opacity: 0.85;
+}
+
+.msg-bubble.me.farewell {
+  background: #8a3b28;
+  color: #fff;
+}
+
+.sealed-banner {
+  border-top: 1px dashed var(--line);
+  padding-top: 18px;
+  text-align: center;
+  color: #5d6b54;
+  background: #eef0ea;
+  border: 1px dashed #c3cbb8;
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 13px;
+}
+
+.big-btn.farewell-btn {
+  background: #6b5a42;
+}
+
+.big-btn.farewell-btn:disabled {
+  background: var(--muted);
+}
+
+.letter-card.is-sealed {
+  border-style: dashed;
+}
+
 .loading {
   text-align: center;
   color: var(--muted);

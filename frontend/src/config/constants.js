@@ -14,6 +14,7 @@ export const ENDPOINTS = {
   ME: `${API_BASE}/api/auth/me`,
   SEND_LETTER: `${API_BASE}/api/letters`,
   REPLY_LETTER: (id) => `${API_BASE}/api/letters/${id}/reply`,
+  FAREWELL_LETTER: (id) => `${API_BASE}/api/letters/${id}/farewell`,
   SKIP_LETTER: (id) => `${API_BASE}/api/letters/${id}/skip`,
   FAVORITE_LETTER: (id) => `${API_BASE}/api/letters/${id}/favorite`,
   THREAD: (id) => `${API_BASE}/api/letters/${id}/thread`,
@@ -63,6 +64,13 @@ export const LABELS = {
   BACK: '返回',
   REPLY_PLACEHOLDER: '回信给这位陌生人……',
   SUBMIT_REPLY: '寄出回复',
+  FAREWELL: '写告别信',
+  FAREWELL_PLACEHOLDER: '写下最后的话，封存这段对话……',
+  SUBMIT_FAREWELL: '封存并寄出告别信',
+  FAREWELL_CONFIRM: '告别信寄出后，这段对话将立刻封存，双方都无法再回复。确定吗？',
+  SEALED_BANNER: '这段对话已封存，只能回看与收藏，不能再回复。',
+  FAREWELL_TAG: '告别信',
+  SEALED: '已封存',
   SENT_FROM_ME: '我寄出',
   SENT_FROM_STRANGER: '陌生人'
 };
@@ -71,5 +79,7 @@ export const STATUS_TEXT = {
   pending: '待处理',
   delivered: '已送达',
   skipped: '已跳过',
-  replied: '已回复'
+  replied: '已回复',
+  farewell: '告别信',
+  sealed: '已封存'
 };

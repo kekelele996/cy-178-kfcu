@@ -25,7 +25,8 @@ module.exports = {
     PENDING: 'pending',
     DELIVERED: 'delivered',
     SKIPPED: 'skipped',
-    REPLIED: 'replied'
+    REPLIED: 'replied',
+    FAREWELL: 'farewell'
   },
 
   ROLES: {
@@ -51,6 +52,8 @@ module.exports = {
     FAVORITED: '已收藏',
     UNFAVORITED: '已取消收藏',
     SKIPPED: '已跳过这封信',
-    REPLIED: '回复已送达'
+    REPLIED: '回复已送达',
+    THREAD_SEALED: '对话已封存，无法再回信',
+    FAREWELL_SENT: '告别信已送达，对话已封存'
   }
 };

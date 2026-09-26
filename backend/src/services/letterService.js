@@ -1,7 +1,14 @@
 const LetterModel = require('../models/letterModel');
 const UserModel = require('../models/userModel');
 const FavoriteModel = require('../models/favoriteModel');
+const ThreadWriteGuard = require('./threadWriteGuard');
 const { LETTER_STATUS, MESSAGES } = require('../config/constants');
+
+const sealedError = () => {
+  const err = new Error(MESSAGES.THREAD_SEALED);
+  err.code = 'CONFLICT';
+  return err;
+};
 
 const LetterService = {
   sendRandom({ senderId, content }) {
@@ -39,18 +46,61 @@ const LetterService = {
     const receiverId = isReceiver ? parent.sender_id : parent.receiver_id;
 
     const rootId = LetterModel.findRootByChild(parent.id);
-    const id = LetterModel.create({
-      senderId: userId,
-      receiverId,
-      parentId: rootId,
-      content,
-      status: LETTER_STATUS.REPLIED,
-      createdAt: Date.now()
+    if (!ThreadWriteGuard.tryAcquire(rootId)) throw sealedError();
+    return LetterModel.inTransaction(() => {
+      // Re-read inside the transaction so a farewell racing with this reply wins
+      const root = LetterModel.findRootById(rootId);
+      if (!root || root.sealed_at !== null) throw sealedError();
+
+      const id = LetterModel.create({
+        senderId: userId,
+        receiverId,
+        parentId: rootId,
+        content,
+        status: LETTER_STATUS.REPLIED,
+        createdAt: Date.now()
+      });
+      if (parent.status === LETTER_STATUS.DELIVERED || parent.status === LETTER_STATUS.PENDING) {
+        LetterModel.updateStatus(parent.id, LETTER_STATUS.REPLIED);
+      }
+      return LetterModel.findById(id);
     });
-    if (parent.status === LETTER_STATUS.DELIVERED || parent.status === LETTER_STATUS.PENDING) {
-      LetterModel.updateStatus(parent.id, LETTER_STATUS.REPLIED);
+  },
+
+  sendFarewell({ userId, rootId, content }) {
+    const root = LetterModel.findRootById(rootId);
+    if (!root) {
+      const err = new Error(MESSAGES.LETTER_NOT_FOUND);
+      err.code = 'NOT_FOUND';
+      throw err;
     }
-    return LetterModel.findById(id);
+    if (root.sender_id !== userId && root.receiver_id !== userId) {
+      const err = new Error(MESSAGES.NOT_YOUR_LETTER);
+      err.code = 'FORBIDDEN';
+      throw err;
+    }
+
+    if (!ThreadWriteGuard.tryAcquire(rootId)) throw sealedError();
+
+    return LetterModel.inTransaction(() => {
+      // First writer seals the thread; any later farewell gets 409 here.
+      const current = LetterModel.findRootById(rootId);
+      if (current.sealed_at !== null) throw sealedError();
+
+      const receiverId = root.sender_id === userId ? root.receiver_id : root.sender_id;
+      const now = Date.now();
+      const id = LetterModel.create({
+        senderId: userId,
+        receiverId,
+        parentId: rootId,
+        content,
+        status: LETTER_STATUS.FAREWELL,
+        isFarewell: true,
+        createdAt: now
+      });
+      LetterModel.sealRoot(rootId, now);
+      return LetterModel.findById(id);
+    });
   },
 
   skip({ userId, letterId }) {
@@ -95,6 +145,8 @@ const LetterService = {
         id: l.id,
         preview: l.content.slice(0, 80),
         status: l.status,
+        sealed: l.sealed_at !== null,
+        sealedAt: l.sealed_at,
         createdAt: l.created_at,
         replyCount: l.reply_count,
         role,
@@ -123,11 +175,14 @@ const LetterService = {
     const me = userId;
     return {
       rootId,
+      sealed: first.sealed_at !== null,
+      sealedAt: first.sealed_at,
       favorited: FavoriteModel.exists({ userId, letterId: rootId }),
       messages: thread.map((m) => ({
         id: m.id,
         content: m.content,
         createdAt: m.created_at,
+        farewell: m.is_farewell === 1,
         fromMe: m.sender_id === me
       }))
     };
