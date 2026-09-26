@@ -18,7 +18,7 @@ function formatTime(ts) {
 function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
   const statusClass = item.status === 'skipped' ? 'badge skipped' : 'badge';
   return (
-    <div className="letter-card" onClick={() => onOpen(item.id)}>
+    <div className={`letter-card ${item.sealed ? 'sealed' : ''}`} onClick={() => onOpen(item.id)}>
       <div className="letter-meta">
         <span>
           {item.role === 'sent' ? LABELS.SENT_FROM_ME : LABELS.SENT_FROM_STRANGER}
@@ -26,6 +26,12 @@ function LetterCard({ item, onOpen, onToggleFavorite, onSkip }) {
         </span>
         <span>
           {formatTime(item.createdAt)}
+          {item.sealed && (
+            <>
+              {' '}
+              <span className="badge sealed">🔒 {LABELS.SEALED_BADGE}</span>
+            </>
+          )}
           {item.status && item.status !== 'delivered' && item.status !== 'pending' && (
             <>
               {' '}

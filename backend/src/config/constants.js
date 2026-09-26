@@ -28,6 +28,11 @@ module.exports = {
     REPLIED: 'replied'
   },
 
+  LETTER_KIND: {
+    NORMAL: 'normal',
+    FAREWELL: 'farewell'
+  },
+
   ROLES: {
     SENDER: 'sender',
     RECEIVER: 'receiver'
@@ -51,6 +56,8 @@ module.exports = {
     FAVORITED: '已收藏',
     UNFAVORITED: '已取消收藏',
     SKIPPED: '已跳过这封信',
-    REPLIED: '回复已送达'
+    REPLIED: '回复已送达',
+    FAREWELL_SENT: '告别信已寄出，这段对话就此封存',
+    THREAD_SEALED: '这段对话已封存，不能再回复了'
   }
 };

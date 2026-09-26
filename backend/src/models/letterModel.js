@@ -1,12 +1,20 @@
 const db = require('../data/database');
 
 const LetterModel = {
-  create({ senderId, receiverId, parentId, content, status, createdAt }) {
+  create({ senderId, receiverId, parentId, content, status, kind, createdAt }) {
     const stmt = db.prepare(
-      `INSERT INTO letters (sender_id, receiver_id, parent_id, content, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO letters (sender_id, receiver_id, parent_id, content, status, kind, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     );
-    const info = stmt.run(senderId, receiverId, parentId || null, content, status, createdAt);
+    const info = stmt.run(
+      senderId,
+      receiverId,
+      parentId || null,
+      content,
+      status,
+      kind || 'normal',
+      createdAt
+    );
     return info.lastInsertRowid;
   },
 
@@ -31,6 +39,18 @@ const LetterModel = {
 
   updateStatus(id, status) {
     return db.prepare('UPDATE letters SET status = ? WHERE id = ?').run(status, id);
+  },
+
+  // Conditional seal: only takes effect when the conversation is still open.
+  // Returns the number of roots actually sealed (0 means someone won the race).
+  sealRoot(rootId, { userId, sealedAt }) {
+    return db
+      .prepare(
+        `UPDATE letters
+           SET sealed = 1, sealed_by = ?, sealed_at = ?
+         WHERE id = ? AND sealed = 0`
+      )
+      .run(userId, sealedAt, rootId).changes;
   },
 
   listSentByUser(userId) {

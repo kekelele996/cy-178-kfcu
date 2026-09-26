@@ -26,6 +26,10 @@ db.exec(`
     parent_id INTEGER,
     content TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
+    kind TEXT NOT NULL DEFAULT 'normal',
+    sealed INTEGER NOT NULL DEFAULT 0,
+    sealed_by INTEGER,
+    sealed_at INTEGER,
     created_at INTEGER NOT NULL,
     FOREIGN KEY (sender_id) REFERENCES users(id),
     FOREIGN KEY (receiver_id) REFERENCES users(id),
@@ -46,5 +50,21 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_letters_receiver ON letters(receiver_id);
   CREATE INDEX IF NOT EXISTS idx_letters_parent ON letters(parent_id);
 `);
+
+// Migrate databases created before farewell letters were introduced
+const letterColumns = db.prepare('PRAGMA table_info(letters)').all();
+const hasColumn = (name) => letterColumns.some((c) => c.name === name);
+if (!hasColumn('kind')) {
+  db.exec(`ALTER TABLE letters ADD COLUMN kind TEXT NOT NULL DEFAULT 'normal'`);
+}
+if (!hasColumn('sealed')) {
+  db.exec(`ALTER TABLE letters ADD COLUMN sealed INTEGER NOT NULL DEFAULT 0`);
+}
+if (!hasColumn('sealed_by')) {
+  db.exec('ALTER TABLE letters ADD COLUMN sealed_by INTEGER');
+}
+if (!hasColumn('sealed_at')) {
+  db.exec('ALTER TABLE letters ADD COLUMN sealed_at INTEGER');
+}
 
 module.exports = db;
